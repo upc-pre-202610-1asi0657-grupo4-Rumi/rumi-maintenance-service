@@ -1,5 +1,6 @@
 # Development profile: runs with no external infrastructure.
-# The schema is created in an in-memory H2 database on startup and dropped on shutdown.
+# The schema is created in an in-memory H2 database on startup and dropped on shutdown,
+# and DevDataSeeder loads sample inspections and damage reports of the sample building.
 spring:
   datasource:
     url: jdbc:h2:mem:maintenancedb;DB_CLOSE_DELAY=-1
