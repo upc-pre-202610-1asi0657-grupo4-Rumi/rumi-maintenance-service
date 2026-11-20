@@ -12,8 +12,9 @@ public class OpenApiConfiguration {
     public OpenAPI maintenanceServiceOpenApi() {
         return new OpenAPI().info(new Info()
                 .title("Rumi Maintenance Service API")
-                .description("REST API of the Building Maintenance bounded context. "
-                        + "Skeleton: only the health endpoint exists; functionality is planned for later sprints.")
-                .version("0.1.0"));
+                .description("REST API of the Building Maintenance bounded context: the calendar of structural "
+                        + "inspections (US17) and their findings (US18), the damage reported by residents (US21) "
+                        + "and the damage board of the administrator (US22).")
+                .version("0.2.0"));
     }
 }

@@ -11,14 +11,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@Tag(name = "Health", description = "Liveness of the service skeleton")
+@Tag(name = "Health", description = "Liveness of the service")
 public class HealthController {
 
     static final String SERVICE_NAME = "rumi-maintenance-service";
 
     @Operation(
             summary = "Check that the service is running",
-            description = "Skeleton endpoint used to verify deployment and gateway routing. "
+            description = "Endpoint used to verify deployment and gateway routing. "
                     + "It is not a functional endpoint of the bounded context."
     )
     @ApiResponse(
