@@ -4,6 +4,26 @@ server:
 spring:
   application:
     name: rumi-maintenance-service
+  web:
+    # Error messages are always in English, whatever the locale of the server or the client.
+    locale: en
+    locale-resolver: fixed
+  # This service owns maintenancedb (PostgreSQL). The schema is in docs/schema.sql.
+  datasource:
+    url: ${MAINTENANCE_DB_URL:jdbc:postgresql://localhost:5432/maintenancedb}
+    username: ${MAINTENANCE_DB_USERNAME:postgres}
+    password: ${MAINTENANCE_DB_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        # Instants are stored in UTC as plain TIMESTAMP columns, as in the ER model.
+        jdbc:
+          time_zone: UTC
+        type:
+          preferred_instant_jdbc_type: TIMESTAMP
 
 springdoc:
   api-docs:

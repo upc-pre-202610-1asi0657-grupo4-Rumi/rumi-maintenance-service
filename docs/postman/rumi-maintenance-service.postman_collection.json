@@ -1,0 +1,407 @@
+{
+  "info": {
+    "name": "Rumi - Maintenance Service (Inspections and damage reports)",
+    "description": "Inspections (US17, US18), damage reports (US21) and the damage board (US22) of rumi-maintenance-service. Run the service with the dev profile (baseUrl http://localhost:8088) and send the requests in order: each one saves the ids that the next ones use. The X-Role, X-Building-Id and X-User-Id headers simulate what the API gateway adds. To go through the gateway instead (baseUrl http://localhost:8080), remove those headers and set the token variable with a JWT from IAM. Never save a real token in this file.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8088"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "buildingId",
+      "value": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d"
+    },
+    {
+      "key": "otherBuildingId",
+      "value": "1f2e3d4c-5b6a-4978-8695-a4b3c2d1e0f9"
+    },
+    {
+      "key": "residentUserId",
+      "value": "d4e5f6a7-b8c9-4d0e-9f1a-2b3c4d5e6f70"
+    },
+    {
+      "key": "inspectionId",
+      "value": "3e1f5a7c-2b4d-4c6e-8f0a-1b3d5f7a9c21"
+    },
+    {
+      "key": "reportId",
+      "value": "8c2e4a6f-1b3d-4f5a-9c7e-2d4f6a8c0e13"
+    },
+    {
+      "key": "nextWeek",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Inspections",
+      "item": [
+        {
+          "name": "1. Schedule inspection (POST 201)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/inspections",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"buildingId\": \"{{buildingId}}\",\n  \"engineerName\": \"Ing. Carla Mendoza\",\n  \"scheduledDate\": \"{{nextWeek}}\"\n}"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Role",
+                "value": "ADMINISTRATOR"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const date = new Date();",
+                  "date.setDate(date.getDate() + 7);",
+                  "pm.collectionVariables.set('nextWeek', date.toISOString().slice(0, 10));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('inspectionId', pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Schedule inspection - past date (400)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/inspections",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"buildingId\": \"{{buildingId}}\",\n  \"engineerName\": \"Ing. Carla Mendoza\",\n  \"scheduledDate\": \"2026-01-15\"\n}"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Role",
+                "value": "ADMINISTRATOR"
+              }
+            ]
+          }
+        },
+        {
+          "name": "3. List inspections of building (GET 200)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/inspections?buildingId={{buildingId}}",
+            "header": [
+              {
+                "key": "X-Role",
+                "value": "ADMINISTRATOR"
+              }
+            ]
+          }
+        },
+        {
+          "name": "4. Start inspection (PATCH 200)",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/v1/inspections/{{inspectionId}}/start",
+            "header": [
+              {
+                "key": "X-Role",
+                "value": "ADMINISTRATOR"
+              }
+            ]
+          }
+        },
+        {
+          "name": "5. Record finding (POST 201)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/inspections/{{inspectionId}}/findings",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Diagonal crack of 3 mm in the beam of axis B-2\",\n  \"severity\": \"HIGH\",\n  \"photoUrl\": \"https://storage.example.com/rumi/inspections/beam-b2.jpg\"\n}"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Role",
+                "value": "ADMINISTRATOR"
+              }
+            ]
+          }
+        },
+        {
+          "name": "6. Complete inspection (PATCH 200)",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/v1/inspections/{{inspectionId}}/complete",
+            "header": [
+              {
+                "key": "X-Role",
+                "value": "ADMINISTRATOR"
+              }
+            ]
+          }
+        },
+        {
+          "name": "7. Record finding on a completed inspection (409)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/inspections/{{inspectionId}}/findings",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Late finding\",\n  \"severity\": \"LOW\",\n  \"photoUrl\": \"https://storage.example.com/rumi/inspections/late.jpg\"\n}"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Role",
+                "value": "ADMINISTRATOR"
+              }
+            ]
+          }
+        },
+        {
+          "name": "8. Resident schedules inspection (403)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/inspections",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"buildingId\": \"{{buildingId}}\",\n  \"engineerName\": \"Ing. Carla Mendoza\",\n  \"scheduledDate\": \"{{nextWeek}}\"\n}"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Role",
+                "value": "RESIDENT"
+              },
+              {
+                "key": "X-Building-Id",
+                "value": "{{buildingId}}"
+              },
+              {
+                "key": "X-User-Id",
+                "value": "{{residentUserId}}"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const date = new Date();",
+                  "date.setDate(date.getDate() + 7);",
+                  "pm.collectionVariables.set('nextWeek', date.toISOString().slice(0, 10));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Damage reports",
+      "item": [
+        {
+          "name": "9. Resident reports damage (POST 201)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/damage-reports",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"buildingId\": \"{{buildingId}}\",\n  \"description\": \"Crack in the wall next to the elevator\",\n  \"zone\": \"FLOOR-3-NORTH\",\n  \"photoUrl\": \"https://storage.example.com/rumi/damage/floor3-wall.jpg\"\n}"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Role",
+                "value": "RESIDENT"
+              },
+              {
+                "key": "X-Building-Id",
+                "value": "{{buildingId}}"
+              },
+              {
+                "key": "X-User-Id",
+                "value": "{{residentUserId}}"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('reportId', pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10. Resident reports damage in another building (403)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/damage-reports",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"buildingId\": \"{{otherBuildingId}}\",\n  \"description\": \"Crack in the lobby\",\n  \"zone\": \"LOBBY\",\n  \"photoUrl\": \"https://storage.example.com/rumi/damage/lobby.jpg\"\n}"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Role",
+                "value": "RESIDENT"
+              },
+              {
+                "key": "X-Building-Id",
+                "value": "{{buildingId}}"
+              },
+              {
+                "key": "X-User-Id",
+                "value": "{{residentUserId}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "11. Report without photo (400)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/damage-reports",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"buildingId\": \"{{buildingId}}\",\n  \"description\": \"Crack in the lobby\",\n  \"zone\": \"LOBBY\"\n}"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Role",
+                "value": "RESIDENT"
+              },
+              {
+                "key": "X-Building-Id",
+                "value": "{{buildingId}}"
+              },
+              {
+                "key": "X-User-Id",
+                "value": "{{residentUserId}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "12. Damage board (GET 200)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/damage-reports/board?buildingId={{buildingId}}",
+            "header": [
+              {
+                "key": "X-Role",
+                "value": "ADMINISTRATOR"
+              }
+            ]
+          }
+        },
+        {
+          "name": "13. Review report (PATCH 200)",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/v1/damage-reports/{{reportId}}/review",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"severity\": \"HIGH\",\n  \"status\": \"UNDER_REVIEW\"\n}"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Role",
+                "value": "ADMINISTRATOR"
+              }
+            ]
+          }
+        },
+        {
+          "name": "14. Resident opens the damage board (403)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/damage-reports/board?buildingId={{buildingId}}",
+            "header": [
+              {
+                "key": "X-Role",
+                "value": "RESIDENT"
+              },
+              {
+                "key": "X-Building-Id",
+                "value": "{{buildingId}}"
+              },
+              {
+                "key": "X-User-Id",
+                "value": "{{residentUserId}}"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
